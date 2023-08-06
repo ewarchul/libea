@@ -7,7 +7,7 @@
 namespace libea::math {
 
 auto evaluate(const auto &population, auto &&fitness_fn) {
-  blaze::DynamicVector<double, blaze::rowVector> fitness_values(
+  blaze::DynamicVector<double> fitness_values(
       population.columns());
   for (auto column :
        ranges::views::iota(0) | ranges::views::take(population.columns())) {

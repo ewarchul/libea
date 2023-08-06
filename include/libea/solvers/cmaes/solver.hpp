@@ -3,7 +3,9 @@
 #include <libea/Math.h>
 #include <libea/common/types.h>
 
+#include <concepts>
 #include <exception>
+#include <iostream>
 #include <libea/solvers/cmaes/parameters.hpp>
 #include <libea/solvers/cmaes/solutions.hpp>
 #include <libea/termination/termination.hpp>
@@ -13,18 +15,26 @@ namespace libea::solvers::cmaes {
 
 template <typename SigmaUpdater, typename FitnessFunction> class solver {
  public:
-  solver(const types::dvec_t& x0, FitnessFunction fit_fn, SigmaUpdater sigma_updater, parameters params,
-        termination::termination_criteria<parameters, solutions> stops)
-      : fn_{std::move(fit_fn)}, params_{std::move(params)}, sigma_updater_{std::move(sigma_updater)}, stops_{std::move(stops)} {
-    solutions_ = solutions{types::as<types::u32_t>(x0.size())};
+  solver(const types::dvec_t& x0, FitnessFunction fitness_fn, SigmaUpdater sigma_updater, parameters params,
+         termination::termination_criteria<parameters, solutions> stops)
+      : fitness_fn_{std::move(fitness_fn)},
+        params_{std::move(params)},
+        sigma_updater_{std::move(sigma_updater)},
+        stops_{std::move(stops)} {
+    solutions_ = solutions{types::as<types::u32_t>(x0.size()), params.lambda_};
     solutions_.mean_ = x0;
   }
 
-  [[nodiscard]] auto run() -> solutions {
+  [[nodiscard]] auto solve() -> solutions {
     while (!terminate()) {
       const auto [pop, diffs] = ask();
-      auto fn_vals = math::evaluate(pop, fn_);
+      auto fn_vals = math::evaluate(pop, fitness_fn_);
       solutions_.inc_feval(params_.lambda_);
+      solutions_.fitness_values_ = fn_vals;
+
+      solutions_.prev_population_ = solutions_.population_;
+      solutions_.population_ = pop;
+
       auto [selected_indices, selected_fn_vals] = math::selection_sort(fn_vals, params_.mu_);
       auto selected_pop = blaze::columns(pop, selected_indices);
       auto selected_diffs = blaze::columns(diffs, selected_indices);
@@ -78,7 +88,13 @@ template <typename SigmaUpdater, typename FitnessFunction> class solver {
     solutions_.BD = solutions_.eigen_vecs * eigen_diag;
   }
 
-  auto update_sigma() -> void { solutions_.sigma_ = sigma_updater_(solutions_.sigma_, solutions_); }
+  auto update_sigma() -> void {
+    if constexpr (SigmaUpdater::requires_fitness_function) {
+      solutions_.sigma_ = sigma_updater_(solutions_.sigma_, solutions_, fitness_fn_);
+    } else {
+      solutions_.sigma_ = sigma_updater_(solutions_.sigma_, solutions_);
+    }
+  }
 
   auto update_cma(auto&& selz) -> void {
     const types::dmat_t BDz = solutions_.BD * selz;
@@ -100,7 +116,7 @@ template <typename SigmaUpdater, typename FitnessFunction> class solver {
     return terminate_status.terminate_;
   }
 
-  FitnessFunction fn_;
+  FitnessFunction fitness_fn_;
   parameters params_;
   solutions solutions_;
   termination::termination_criteria<parameters, solutions> stops_;

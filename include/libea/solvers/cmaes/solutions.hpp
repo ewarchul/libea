@@ -10,9 +10,12 @@ namespace libea::solvers::cmaes {
 struct solutions {
   solutions() = default;
 
-  solutions(types::u32_t dimension) : dim_{dimension} {
+  solutions(types::u32_t dimension, types::u32_t lambda) : dim_{dimension}, lambda_{lambda} {
     psigma_ = blaze::zero<types::number_t>(dim_);
     pcov_ = blaze::zero<types::number_t>(dim_);
+
+    population_ = blaze::zero<types::number_t>(dim_, lambda_);
+    prev_population_ = blaze::zero<types::number_t>(dim_, lambda_);
 
     eigen_vecs = math::diag(dim_, 1);
     BD = eigen_vecs * math::diag(dim_, 1);
@@ -32,14 +35,20 @@ struct solutions {
   }
 
   types::u32_t dim_{};
-  unsigned iter_{};
-  unsigned fevals_{};
+  types::u64_t iter_{};
+  types::u64_t fevals_{};
 
-  double sigma_{1};
+  types::u32_t lambda_{};
+
+  types::number_t sigma_{1};
 
   types::dvec_t mean_{};
-  types::dmat_t population_{};
+  types::dvec_t mean_eval_{};
 
+  types::dmat_t population_{};
+  types::dmat_t prev_population_{};
+
+  types::dvec_t fitness_values_{};
   types::dvec_t best_so_far_{};
   types::number_t best_so_far_fitness_{std::numeric_limits<types::number_t>{}.max()};
   std::vector<types::dvec_t> best_log_{};
