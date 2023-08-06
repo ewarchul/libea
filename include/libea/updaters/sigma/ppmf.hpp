@@ -20,16 +20,13 @@ struct ppmf {
       throw std::invalid_argument("Target probability cannot be negative!");
     }
   }
+
   auto operator()(double sigma, auto& solutions, auto&& fitness_func) -> double {
     const auto prev_midpoint = blaze::mean<blaze::columnwise>(solutions.prev_population_);
     const auto prev_midpoint_fitness = fitness_func(prev_midpoint);
     solutions.inc_feval(1);
     double success_prob = ranges::count_if(solutions.fitness_values_, [&](auto fn_val) { return fn_val < prev_midpoint_fitness; }) / solutions.lambda_;
-    std::cout << success_prob << std::endl;
-    if (solutions.iter_ == 10) {
-      exit(1);
-    }
-    return sigma * blaze::exp(damp_factor * blaze::abs(success_prob - target_prob) / (1 - target_prob));
+    return sigma * blaze::exp(damp_factor * (success_prob - target_prob) / (1 - target_prob));
   }
 
   double damp_factor{};
