@@ -1,4 +1,4 @@
-# libeacpp [work-in-progress]
+# libeacpp :construction_worker_man: 
 
 **{libeacpp}** is [**{blaze}**-ingly](https://bitbucket.org/blaze-lib/blaze/src/master/) fast header-only library providing evolutionary optimizition
 solvers written in C++20.
