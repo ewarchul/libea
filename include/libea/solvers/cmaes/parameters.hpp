@@ -1,12 +1,10 @@
 #pragma once
 
-
-#include <range/v3/range/conversion.hpp>
-#include <range/v3/view/iota.hpp>
-
 #include <libea/common/consts.h>
 #include <libea/common/types.h>
-#include <libea/math/generators.hpp>
+
+#include <Eigen/Core>
+#include <iostream>
 
 namespace libea::solvers::cmaes {
 
@@ -14,49 +12,50 @@ struct parameters {
   parameters() = default;
 
   parameters(types::u32_t dimension) : dim_{dimension} {
-    weights_ = blaze::log(mu_ + 1) - blaze::log(blaze::linspace(mu_, types::as<types::u32_t>(1), mu_));
-    weights_ = weights_ / blaze::sum(weights_);
-    weights_diag_ = math::diag(weights_);
+    weights_ = std::log(mu_ + 1) - types::dvec_t::LinSpaced(mu_, 1, mu_).array().log();
+    weights_ = weights_ / weights_.sum();
+    weights_diag_ = weights_.asDiagonal();
 
-    mueff_ = blaze::pow(blaze::sum(weights_), 2) / blaze::sum(blaze::pow(weights_, 2));
+    mueff_ = std::pow(weights_.sum(), 2) / weights_.unaryExpr([](const auto x) { return x * x; }).sum();
     cmu_ = mueff_;
-    ccov_ = (1.0 / cmu_) * 2.0 / blaze::pow(dim_ + 1.4, 2) +
-            (1.0 - 1.0 / cmu_) * ((2.0 * cmu_ - 1.0) / (blaze::pow((dim_ + 2), 2.0) + 2.0 * cmu_));
+    ccov_ = (1.0 / cmu_) * 2.0 / std::pow(dim_ + 1.4, 2) +
+            (1.0 - 1.0 / cmu_) * ((2.0 * cmu_ - 1.0) / (std::pow((dim_ + 2), 2.0) + 2.0 * cmu_));
 
     csigma_ = (mueff_ + 2) / (dim_ + mueff_ + 3);
-    chin_ = blaze::sqrt(dim_) * (1.0 - (1.0 / (4.0 * dim_)) + (1.0 / (21.0 * dim_ * dim_)));
-    psigma_coeff_ = blaze::sqrt(csigma_ * (2.0 - csigma_) * mueff_);
+    chin_ = std::sqrt(dim_) * (1.0 - (1.0 / (4.0 * dim_)) + (1.0 / (21.0 * dim_ * dim_)));
+    psigma_coeff_ = std::sqrt(csigma_ * (2.0 - csigma_) * mueff_);
     psigma_decay_factor_ = 1.0 - csigma_;
     pcov_decay_factor_ = 1.0 - cc_;
-    pcov_coeff_ = blaze::sqrt(cc_ * (2.0 - cc_) * mueff_);
+    pcov_coeff_ = std::sqrt(cc_ * (2.0 - cc_) * mueff_);
   }
 
   types::u32_t dim_;
-  types::number_t hsig_coeff_{(1.4 + 2.0 / (dim_ + 1.0))};
+  double hsig_coeff_{(1.4 + 2.0 / (dim_ + 1.0))};
 
   types::u64_t max_fevals_{consts::MAX_FEVALS_MUL * dim_};
   types::u32_t lambda_{consts::LAMBDA_MUL * dim_};
-  types::u32_t mu_{types::as<types::u32_t>(blaze::floor(types::as<types::number_t>(lambda_) / 2))};
+  types::u32_t mu_{types::as<types::u32_t>(std::floor(types::as<double>(lambda_) / 2))};
 
-  types::number_t xtol_{consts::DEFAULT_TOL};
-  types::number_t lower_bound_{consts::DEFAULT_LOWER_BOUND};
-  types::number_t upper_bound_{consts::DEFAULT_UPPER_BOUND};
+  double xtol_{consts::DEFAULT_TOL};
+  double lower_bound_{consts::DEFAULT_LOWER_BOUND};
+  double upper_bound_{consts::DEFAULT_UPPER_BOUND};
 
-  types::number_t sigma_{consts::DEFAULT_STEP_SIZE};
-  types::number_t cc_{4.0 / (dim_ + 4.0 + 0.0)};
-  types::number_t csigma_{};
+  double sigma_{consts::DEFAULT_STEP_SIZE};
+  double cc_{4.0 / (dim_ + 4.0 + 0.0)};
+  double csigma_{};
 
-  types::number_t psigma_decay_factor_{};
-  types::number_t psigma_coeff_{};
+  double psigma_decay_factor_{};
+  double psigma_coeff_{};
 
-  types::number_t pcov_decay_factor_{};
-  types::number_t pcov_coeff_{};
+  double pcov_decay_factor_{};
+  double pcov_coeff_{};
 
-  types::number_t ccov_{};
-  types::number_t chin_{};
-  types::number_t cmu_{};
-  types::number_t mueff_{};
+  double ccov_{};
+  double chin_{};
+  double cmu_{};
+  double mueff_{};
+
   types::dvec_t weights_{};
   types::dmat_t weights_diag_{};
 };
-}  // namespace ew_cmaes
+}  // namespace libea::solvers::cmaes

@@ -1,16 +1,16 @@
 #pragma once
 
+#include <EigenRand/EigenRand>
 #include <random>
 
 namespace {
 std::random_device rd{};
-std::mt19937 gen{rd()};
-} // namespace
+Eigen::Rand::P8_mt19937_64 urng{42};
+}  // namespace
 
 namespace libea::common {
 
-auto rnorm() -> double {
-  auto iso_normal_dist = std::normal_distribution<>{0, 1};
-  return iso_normal_dist(gen);
+inline auto rnorm(const auto rows, const auto cols)  {
+  return Eigen::Rand::normal<Eigen::MatrixXd>(rows, cols, urng);
 }
-} // namespace libea::common
+}  // namespace libea::common

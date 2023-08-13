@@ -1,6 +1,7 @@
 #pragma once
 
 #include <blaze/Math.h>
+#include <libea/common/types.h>
 
 #include <iostream>
 #include <range/v3/algorithm/count_if.hpp>
@@ -22,11 +23,13 @@ struct ppmf {
   }
 
   auto operator()(double sigma, auto& solutions, auto&& fitness_func) -> double {
-    const auto prev_midpoint = blaze::mean<blaze::columnwise>(solutions.prev_population_);
+    const auto prev_midpoint = solutions.prev_population_.colwise().mean();
     const auto prev_midpoint_fitness = fitness_func(prev_midpoint);
     solutions.inc_feval(1);
-    double success_prob = ranges::count_if(solutions.fitness_values_, [&](auto fn_val) { return fn_val < prev_midpoint_fitness; }) / solutions.lambda_;
-    return sigma * blaze::exp(damp_factor * (success_prob - target_prob) / (1 - target_prob));
+    const auto success_prob =
+        ranges::count_if(solutions.fitness_values_, [&](auto fn_val) { return fn_val < prev_midpoint_fitness; }) /
+        solutions.lambda_;
+    return sigma * std::exp(damp_factor * (types::as<double>(success_prob) - target_prob) / (1 - target_prob));
   }
 
   double damp_factor{};
