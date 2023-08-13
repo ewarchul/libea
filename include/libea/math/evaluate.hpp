@@ -12,17 +12,6 @@
 
 namespace libea::math {
 
-/*auto evaluate(const auto &population, auto &&fitness_fn) {*/
-  /*blaze::DynamicVector<double> fitness_values(*/
-      /*population.columns());*/
-  /*for (auto column :*/
-       /*ranges::views::iota(0) | ranges::views::take(population.columns())) {*/
-    /*const auto &col_view = blaze::column(population, types::as<std::size_t>(column));*/
-    /*fitness_values[types::as<std::size_t>(column)] = fitness_fn(col_view);*/
-  /*}*/
-  /*return fitness_values;*/
-/*}*/
-
 auto evaluate(const auto &population, auto &&fitness_fn) {
   auto colview = population.colwise();
   auto result = ranges::views::transform(colview, fitness_fn) | ranges::to_vector;
