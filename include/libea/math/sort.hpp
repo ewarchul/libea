@@ -7,6 +7,7 @@
 #include <range/v3/view/take.hpp>
 
 namespace libea::math {
+// @TODO remove repetitions
 auto trunc_sort_ind(auto &&fitness_vals, const auto trunc_num) {
   auto zipped = fitness_vals | ranges::views::enumerate | ranges::to_vector;
   ranges::sort(zipped, [](const auto &r1, const auto &r2) {

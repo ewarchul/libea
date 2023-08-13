@@ -12,6 +12,7 @@
 
 namespace libea::math {
 
+// @TODO rewrite in idomatic Eigen, i.e., with unaryExp
 auto evaluate(const auto &population, auto &&fitness_fn) {
   auto colview = population.colwise();
   auto result = ranges::views::transform(colview, fitness_fn) | ranges::to_vector;

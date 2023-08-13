@@ -11,6 +11,9 @@ namespace libea::updaters::sigma {
 
 // Previous Population Midpoint Fitness step-size adaptation rule
 // https://ieeexplore.ieee.org/abstract/document/9504829
+
+
+// @TODO investigate why it stops to work with bigger dimensions
 struct ppmf {
   static constexpr bool requires_fitness_function{true};
   ppmf(double damping_factor, double target_probability) : damp_factor{damping_factor}, target_prob{target_probability} {
