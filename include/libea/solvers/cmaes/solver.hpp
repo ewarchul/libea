@@ -13,8 +13,8 @@
 #include <libea/solvers/cmaes/solutions.hpp>
 #include <libea/termination/termination.hpp>
 #include <utility>
-#include "libea/common/random.hpp"
 
+#include "libea/common/random.hpp"
 
 namespace libea::solvers::cmaes {
 
@@ -41,7 +41,8 @@ template <typename SigmaUpdater, typename FitnessFunction> class solver {
       solutions_.population_ = std::move(pop);
 
       auto [selected_indices, selected_fn_vals] = math::trunc_sort_ind(fn_vals, params_.mu_);
-      auto selected_pop = pop(Eigen::all, selected_indices);  // blaze::columns(pop, selected_indices);
+      auto selected_pop = solutions_.population_(Eigen::all,
+                                                 selected_indices);  // blaze::columns(pop, selected_indices);
       auto selected_diffs = diffs(Eigen::all, selected_indices);
 
       auto current_best = selected_pop(Eigen::all, 0);
@@ -58,7 +59,7 @@ template <typename SigmaUpdater, typename FitnessFunction> class solver {
  private:
   [[nodiscard]] auto ask() {
     types::dmat_t diffs = common::rnorm(params_.dim_, params_.lambda_);
-    types::dmat_t population = solutions_.mean_.replicate(1, params_.lambda_) + solutions_.sigma_ * solutions_.BD * diffs;
+    types::dmat_t population = solutions_.mean_.replicate(1, params_.lambda_) + solutions_.sigma_ * solutions_.BD_mat_ * diffs;
 
     return std::make_pair(population, diffs);
   }
@@ -69,22 +70,27 @@ template <typename SigmaUpdater, typename FitnessFunction> class solver {
     const auto zmean = selected_diffs * params_.weights_;
 
     solutions_.psigma_ =
-        params_.psigma_decay_factor_ * solutions_.psigma_ + params_.psigma_coeff_ * (solutions_.eigen_vecs * zmean);
+        params_.psigma_decay_factor_ * solutions_.psigma_ + params_.psigma_coeff_ * (solutions_.eigen_vecs_ * zmean);
 
     const auto hsig_exp = 2 * solutions_.fevals_ / params_.lambda_;
     solutions_.hsig_ = (solutions_.psigma_.norm() / std::sqrt(1.0 - std::pow(params_.psigma_decay_factor_, hsig_exp)) /
                         params_.chin_) < params_.hsig_coeff_;
 
     solutions_.pcov_ =
-        params_.pcov_decay_factor_ * solutions_.pcov_ + solutions_.hsig_ * params_.pcov_coeff_ * (solutions_.BD * zmean);
+        params_.pcov_decay_factor_ * solutions_.pcov_ + solutions_.hsig_ * params_.pcov_coeff_ * (solutions_.BD_mat_ * zmean);
 
     update_cma(std::move(selected_diffs));
     update_sigma();
 
-    eigen_solver_.compute(solutions_.cov_mat);
-    auto eigen_vals = eigen_solver_.eigenvalues().real().unaryExpr([](const auto& x) { return std::sqrt(x); });
-    solutions_.eigen_vecs = eigen_solver_.eigenvectors().real();
-    solutions_.BD = solutions_.eigen_vecs * eigen_vals.asDiagonal();
+    eigen_solver_.compute(solutions_.cov_mat_);
+    if (eigen_solver_.info() != Eigen::Success) [[unlikely]] {
+      solutions_.indef_cov_mat_ = true;
+    } else {
+      solutions_.eigen_vals_diag_ =
+          eigen_solver_.eigenvalues().real().unaryExpr([](const auto& x) { return std::sqrt(x); }).asDiagonal();
+      solutions_.eigen_vecs_ = eigen_solver_.eigenvectors().real();
+      solutions_.BD_mat_ = solutions_.eigen_vecs_ * solutions_.eigen_vals_diag_;
+    }
   }
 
   auto update_sigma() -> void {
@@ -96,23 +102,23 @@ template <typename SigmaUpdater, typename FitnessFunction> class solver {
   }
 
   auto update_cma(auto&& selz) -> void {
-    const auto BDz = solutions_.BD * selz;
+    const auto BDz = solutions_.BD_mat_ * selz;
 
-    const auto empirical_cov = (1.0 - params_.ccov_) * solutions_.cov_mat;
+    const auto empirical_cov = (1.0 - params_.ccov_) * solutions_.cov_mat_;
     const auto rank_mu_cov = params_.ccov_ * (1.0 / params_.cmu_) *
                              (solutions_.pcov_ * solutions_.pcov_.transpose() +
-                              (1.0 - solutions_.hsig_) * params_.cc_ * (2.0 - params_.cc_) * solutions_.cov_mat);
+                              (1.0 - solutions_.hsig_) * params_.cc_ * (2.0 - params_.cc_) * solutions_.cov_mat_);
     const auto rank_one_cov = params_.ccov_ * (1 - 1 / params_.cmu_) * BDz * params_.weights_diag_ * BDz.transpose();
 
-    solutions_.cov_mat = empirical_cov + rank_mu_cov + rank_one_cov;
+    solutions_.cov_mat_ = empirical_cov + rank_mu_cov + rank_one_cov;
   }
 
   [[nodiscard]] auto terminate() -> bool {
-    const auto terminate_status = stops_.check(params_, solutions_);
-    if (terminate_status.terminate_) {
-      //    fmt:rint("{}\n", terminate_status.msg_);
+    const auto [terminate, msg] = stops_.check(params_, solutions_);
+    if (terminate) {
+      solutions_.stop_msg_ = msg;
     }
-    return terminate_status.terminate_;
+    return terminate;
   }
 
   SigmaUpdater sigma_updater_;

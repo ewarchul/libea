@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fmt/core.h>
 #include <libea/common/consts.h>
 #include <libea/common/types.h>
 
@@ -12,6 +13,9 @@ struct parameters {
   parameters() = default;
 
   parameters(types::u32_t dimension) : dim_{dimension} {
+    max_iter_ = types::as<types::u64_t>(std::floor(max_fevals_ / lambda_));
+    tolx_ = consts::DEFAULT_TOLX_MUL * sigma_;
+
     weights_ = std::log(mu_ + 1) - types::dvec_t::LinSpaced(mu_, 1, mu_).array().log();
     weights_ = weights_ / weights_.sum();
     weights_diag_ = weights_.asDiagonal();
@@ -33,10 +37,16 @@ struct parameters {
   double hsig_coeff_{(1.4 + 2.0 / (dim_ + 1.0))};
 
   types::u64_t max_fevals_{consts::MAX_FEVALS_MUL * dim_};
+  types::u64_t max_iter_{};
   types::u32_t lambda_{consts::LAMBDA_MUL * dim_};
   types::u32_t mu_{types::as<types::u32_t>(std::floor(types::as<double>(lambda_) / 2))};
 
-  double xtol_{consts::DEFAULT_TOL};
+  double tolx_{};
+  double tol_fitness_{};
+  double target_fitness_{};
+
+  double tol_cov_cond_{};
+
   double lower_bound_{consts::DEFAULT_LOWER_BOUND};
   double upper_bound_{consts::DEFAULT_UPPER_BOUND};
 
@@ -59,3 +69,18 @@ struct parameters {
   types::dmat_t weights_diag_{};
 };
 }  // namespace libea::solvers::cmaes
+
+template <> struct fmt::formatter<libea::solvers::cmaes::parameters> {
+  constexpr auto parse(format_parse_context& ctx) -> format_parse_context::iterator {
+    auto it = ctx.begin(), end = ctx.end();
+    if (it != end && *it != '}') fmt::detail::throw_format_error("invalid format");
+    return it;
+  }
+
+  auto format(const libea::solvers::cmaes::parameters& p, fmt::format_context& ctx) -> fmt::format_context::iterator {
+    return fmt::format_to(ctx.out(),
+                          "\n--\ndim = {};\nn.max.fevals = {};\nn.max.iter = {};\nxtol "
+                          "= {};\ninit.pop.size = {};\ninit.sigma = {};\n--\n",
+                          p.dim_, p.max_fevals_, p.max_iter_, p.tolx_, p.lambda_, p.sigma_);
+  }
+};

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fmt/core.h>
 #include <libea/common/types.h>
 
 #include <Eigen/Core>
@@ -12,7 +13,8 @@ namespace libea::solvers::cmaes {
 struct solutions {
   solutions() = default;
 
-  solutions(types::u32_t dimension, types::u32_t lambda) : dim_{dimension}, lambda_{lambda} {
+  solutions(types::u32_t dimension, types::u32_t lambda)
+      : dim_{dimension}, lambda_{lambda} {
     psigma_ = types::dvec_t::Zero(dim_);
     pcov_ = types::dvec_t::Zero(dim_);
 
@@ -20,12 +22,12 @@ struct solutions {
     prev_population_ = types::dmat_t::Zero(dim_, lambda_);
 
     auto e_vec = types::dvec_t::Ones(dim_);
-    eigen_vecs = e_vec.asDiagonal();
+    eigen_vecs_ = e_vec.asDiagonal();
 
     types::dmat_t f = e_vec.asDiagonal();
-    BD = f * e_vec.asDiagonal();
+    BD_mat_ = f * e_vec.asDiagonal();
 
-    cov_mat = BD * BD.transpose();
+    cov_mat_ = BD_mat_ * BD_mat_.transpose();
   }
 
   auto inc_feval(const types::u32_t lambda) { fevals_ += lambda; }
@@ -37,14 +39,14 @@ struct solutions {
       best_so_far_fitness_ = fitness;
     }
     best_log_.push_back(current_best);
-    best_log_fitness.push_back(fitness);
+    best_log_fitness_.push_back(fitness);
   }
-
 
   types::u32_t dim_{};
   types::u64_t iter_{};
-  types::u64_t dummy_iter_{};
   types::u64_t fevals_{};
+  std::string stop_msg_{};
+
   types::u32_t lambda_{};
   double sigma_{1};
 
@@ -57,14 +59,35 @@ struct solutions {
   types::dvec_t best_so_far_{};
   double best_so_far_fitness_{std::numeric_limits<double>{}.max()};
   std::vector<types::dvec_t> best_log_{};
-  std::vector<double> best_log_fitness{};
+  std::vector<double> best_log_fitness_{};
 
   bool hsig_{true};
   types::dvec_t pcov_;
   types::dvec_t psigma_{};
-  types::dmat_t eigen_vecs{};
-  types::dmat_t BD{};
-  types::dmat_t cov_mat{};
+  types::dmat_t eigen_vecs_{};
+  types::dmat_t eigen_vals_diag_{};
+  types::dmat_t BD_mat_{}; // eigen_vecs * eigen_vals_diag_
+  types::dmat_t cov_mat_{};
+  bool indef_cov_mat_{false};
 };
 
 }  // namespace libea::solvers::cmaes
+
+template <> struct fmt::formatter<libea::solvers::cmaes::solutions> {
+  constexpr auto parse(format_parse_context& ctx)
+      -> format_parse_context::iterator {
+    auto it = ctx.begin(), end = ctx.end();
+    if (it != end && *it != '}')
+      fmt::detail::throw_format_error("invalid format");
+    return it;
+  }
+
+  auto format(const libea::solvers::cmaes::solutions& s,
+              fmt::format_context& ctx) -> fmt::format_context::iterator {
+    return fmt::format_to(ctx.out(),
+                          "\n--\nn.iter = {};\nn.fevals = {};\nbest_fit = "
+                          "{};\nstop.msg = {};\n--\n",
+                          s.iter_, s.fevals_, s.best_so_far_fitness_,
+                          s.stop_msg_);
+  }
+};
