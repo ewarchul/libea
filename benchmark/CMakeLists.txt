@@ -14,6 +14,6 @@ find_package(range-v3 REQUIRED)
 add_executable(cmaes_benchmark benchmark.cpp)
 target_link_libraries(cmaes_benchmark eacxx::eacxx libcmaes::cmaes Eigen3::Eigen fmt::fmt)
 set_target_properties(cmaes_benchmark PROPERTIES CXX_STANDARD 20)
-target_compile_options(cmaes_benchmark PRIVATE -O3 -ffast-math)
+target_compile_options(cmaes_benchmark PRIVATE -O3 -ffast-math -march=native )
 
 

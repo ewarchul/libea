@@ -36,4 +36,4 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
       -Wno-gnu-zero-variadic-macro-arguments)
 endif()
 
-set(OPTIM_COMPILE_FLAGS -O3 -march=native -ffast-math)
+set(OPTIM_COMPILE_FLAGS -O3 -ffast-math -march=native)

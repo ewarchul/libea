@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h>
 #include <libea/Math.h>
 #include <libea/common/types.h>
 
@@ -125,7 +126,7 @@ template <typename SigmaUpdater, typename FitnessFunction> class solver {
   parameters params_;
   solutions solutions_;
   termination::termination_criteria<parameters, solutions> stops_;
-  Eigen::EigenSolver<types::dmat_t> eigen_solver_;
+  Eigen::SelfAdjointEigenSolver<types::dmat_t> eigen_solver_;
 };
 
 }  // namespace libea::solvers::cmaes
