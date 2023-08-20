@@ -16,28 +16,19 @@ struct termination_status {
 };
 
 template <typename Parameters, typename Solutions> struct termination_criteria {
-  using termination_callback =
-      std::function<bool(const Parameters&, const Solutions&)>;
-  using value_type = std::pair<termination_name,termination_callback>;
+  using termination_callback = std::function<bool(const Parameters&, const Solutions&)>;
+  using value_type = std::pair<termination_name, termination_callback>;
 
-  [[nodiscard]] auto check(const auto& params, const auto& sols)
-      -> termination_status {
+  [[nodiscard]] auto check(const auto& params, const auto& sols) -> termination_status {
     for (auto&& [name, terminate_cb] : criteria_) {
       if (terminate_cb(params, sols)) {
-        return termination_status{
-            .terminate_ = true,
-            .msg_ = fmt::format("Solver is terminated with the following "
-                                "termination criteria: {}",
-                                name)};
+        return termination_status{.terminate_ = true, .msg_ = name};
       }
     }
     return {};
   }
 
-  auto add_critiera(const termination_name& name,
-                    const termination_callback& cb) -> void {
-    criteria_.try_emplace(name, cb);
-  }
+  auto add_critiera(const termination_name& name, const termination_callback& cb) -> void { criteria_.try_emplace(name, cb); }
 
   auto remove_critiera(const termination_name& name) {
     if (criteria_.contains(name)) {

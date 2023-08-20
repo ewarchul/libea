@@ -42,8 +42,8 @@ struct parameters {
   types::u32_t mu_{types::as<types::u32_t>(std::floor(types::as<double>(lambda_) / 2))};
 
   double tolx_{};
-  double tol_fitness_{};
-  double target_fitness_{};
+  double tol_fitness_{consts::DEFAULT_FITNESS_TOL};
+  double target_fitness_{std::numeric_limits<double>::min()};
 
   double tol_cov_cond_{};
 

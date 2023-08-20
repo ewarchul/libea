@@ -86,10 +86,9 @@ template <typename SigmaUpdater, typename FitnessFunction> class solver {
     if (eigen_solver_.info() != Eigen::Success) [[unlikely]] {
       solutions_.indef_cov_mat_ = true;
     } else {
-      solutions_.eigen_vals_diag_ =
-          eigen_solver_.eigenvalues().real().unaryExpr([](const auto& x) { return std::sqrt(x); }).asDiagonal();
+      solutions_.eigen_values_ = eigen_solver_.eigenvalues().real().unaryExpr([](const auto& x) { return std::sqrt(x); });
       solutions_.eigen_vecs_ = eigen_solver_.eigenvectors().real();
-      solutions_.BD_mat_ = solutions_.eigen_vecs_ * solutions_.eigen_vals_diag_;
+      solutions_.BD_mat_ = solutions_.eigen_vecs_ * solutions_.eigen_values_.asDiagonal();
     }
   }
 
