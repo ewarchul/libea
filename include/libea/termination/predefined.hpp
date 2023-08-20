@@ -7,7 +7,8 @@
 #include <libea/termination/termination.hpp>
 
 namespace libea::termination {
-
+// TODO: that shall be handled by specific type, i.e., termination_criterium, which also would be extended with condition type
+// (pre- and postcondition) to hide skipping first iteration
 template <typename P, typename S> using criterium = termination_criteria<P, S>::value_type;
 
 template <typename P, typename S>
