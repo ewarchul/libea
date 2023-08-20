@@ -38,8 +38,8 @@ struct solutions {
       best_so_far_ = current_best;
       best_so_far_fitness_ = fitness;
     }
-    best_log_.push_back(current_best);
-    best_log_fitness_.push_back(fitness);
+    best_param_history.push_back(current_best);
+    best_fitness_history.push_back(fitness);
   }
 
   types::u32_t dim_{};
@@ -58,8 +58,8 @@ struct solutions {
   types::dvec_t fitness_values_{};
   types::dvec_t best_so_far_{};
   double best_so_far_fitness_{std::numeric_limits<double>{}.max()};
-  std::vector<types::dvec_t> best_log_{};
-  std::vector<double> best_log_fitness_{};
+  std::vector<types::dvec_t> best_param_history{};
+  std::vector<double> best_fitness_history{};
 
   bool hsig_{true};
   types::dvec_t pcov_;
