@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <iostream>
 #include <libea/termination/termination.hpp>
 
@@ -32,34 +33,30 @@ template <typename P, typename S>
 const auto condition_number = criterium<P, S>{"[ConditionCov] condition number of covariance matrix exceeds assumed threshold",
                                               [](const auto& p, const auto& s) {
                                                 const auto eigen_vals = s.eigen_vals_diag_.diagonal();
-                                                const auto cond_num = eigen_vals.maxCoeff() / eigen_vals.minCoeff(); 
+                                                const auto cond_num = eigen_vals.maxCoeff() / eigen_vals.minCoeff();
                                                 return cond_num < p.tol_cov_cond_;
                                               }};
 
-
+template <typename P, typename S>
+const auto indef_cov_mat = criterium<P, S>{"[IndefCovMat] covariance matrix is not numerically positive definite",
+                                           [](const auto&, const auto& s) { return s.indef_cov_mat_; }};
 
 template <typename P, typename S>
-const auto indef_cov_mat = criterium<P, S>{"[StopIndefCovMat] covariance matrix is not numerically positive definite",
-                                           [](const auto&, const auto& s) {
-                                              return s.indef_cov_mat_;
-                                           }};
-
-template <typename P, typename S>
-const auto no_axis_effect = criterium<P, S>{"[NoEffectAxis] Addition of 10% of step size multiplier does not change mean value",
-                                            [](const auto& p, const auto& s) {
-                                              const auto eigen_index = (s.iter_ % p.dim_) + 1;
-                                              const euto eigen_val = s.eigen_vals_diag_.diagonal()[eigen_index];
-                                              const euto eigen_vec = s.eigen_vals
-                                              const auto diff_vec = s.mean_ - (s.mean_ + 0.1 * s.sigma_ * eigen_val 
-                      
-                                            }};
+const auto no_axis_effect = criterium<P, S>{
+    "[NoEffectAxis] Addition of 10% of step size multiplier does not change mean value", [](const auto& p, const auto& s) {
+      const auto index = (s.iter_ % p.dim_) + 1;
+      const auto eigen_vec = s.eigen_vecs.col(index);
+      const auto eigen_val = s.eigen_values_[index];
+      const auto diff_vec = s.mean_ - (s.mean_ + 0.1 * s.sigma_ * std::sqrt(eigen_val) * eigen_vec);
+      return diff_vec.norm() < std::numeric_limits<double>::min();
+    }};
 
 template <typename P, typename S>
 const auto no_coord_effect =
     criterium<P, S>{"[NoEffectCoord] Addition of 20% of step size multiplier in any coordinate does not change mean value",
                     [](const auto&, const auto& s) {
-                        const auto diff = s.mean_ - (s.mean_ + 0.2 * s.sigma_);
-                        return diff.norm() < std::numeric_limits<double>::min();
+                      const auto diff = s.mean_ - (s.mean_ + 0.2 * s.sigma_);
+                      return diff.norm() < std::numeric_limits<double>::min();
                     }};
 
 template <typename Parameters, typename Solutions>

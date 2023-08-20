@@ -65,6 +65,7 @@ struct solutions {
   types::dvec_t pcov_;
   types::dvec_t psigma_{};
   types::dmat_t eigen_vecs_{};
+  types::dvec_t eigen_values_{};
   types::dmat_t eigen_vals_diag_{};
   types::dmat_t BD_mat_{}; // eigen_vecs * eigen_vals_diag_
   types::dmat_t cov_mat_{};
