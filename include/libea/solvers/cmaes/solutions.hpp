@@ -37,6 +37,7 @@ struct solutions {
     if (fitness < best_so_far_fitness_) {
       best_so_far_ = current_best;
       best_so_far_fitness_ = fitness;
+      best_so_far_fitness_history.push_back(best_so_far_fitness_);
     }
     best_param_history.push_back(current_best);
     best_fitness_history.push_back(fitness);
@@ -60,6 +61,7 @@ struct solutions {
   double best_so_far_fitness_{std::numeric_limits<double>{}.max()};
   std::vector<types::dvec_t> best_param_history{};
   std::vector<double> best_fitness_history{};
+  std::vector<double> best_so_far_fitness_history{};
 
   bool hsig_{true};
   types::dvec_t pcov_;
