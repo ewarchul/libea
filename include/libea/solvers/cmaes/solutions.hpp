@@ -19,7 +19,12 @@ struct solutions {
     pcov_ = types::dvec_t::Zero(dim_);
 
     population_ = types::dmat_t::Zero(dim_, lambda_);
+    population_.fill(10000000);
+
     prev_population_ = types::dmat_t::Zero(dim_, lambda_);
+    prev_population_.fill(1000000);
+
+
 
     auto e_vec = types::dvec_t::Ones(dim_);
     eigen_vecs_ = e_vec.asDiagonal();
@@ -37,10 +42,11 @@ struct solutions {
     if (fitness < best_so_far_fitness_) {
       best_so_far_ = current_best;
       best_so_far_fitness_ = fitness;
-      best_so_far_fitness_history.push_back(best_so_far_fitness_);
     }
+    sigma_history.push_back(sigma_);
     best_param_history.push_back(current_best);
     best_fitness_history.push_back(fitness);
+    best_so_far_fitness_history.push_back(best_so_far_fitness_);
   }
 
   types::u32_t dim_{};
@@ -62,6 +68,7 @@ struct solutions {
   std::vector<types::dvec_t> best_param_history{};
   std::vector<double> best_fitness_history{};
   std::vector<double> best_so_far_fitness_history{};
+  std::vector<double> sigma_history{};
 
   bool hsig_{true};
   types::dvec_t pcov_;

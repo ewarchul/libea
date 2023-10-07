@@ -74,13 +74,14 @@ const auto no_coord_effect =
 template <typename Parameters, typename Solutions>
 const auto predefined_termination_criteria =
     termination_criteria<Parameters, Solutions>{.criteria_ = {
-                                                    max_fevals<Parameters, Solutions>,
-                                                    tol_x<Parameters, Solutions>,
-                                                    tol_fitness<Parameters, Solutions>,
-                                                    condition_number<Parameters, Solutions>,
-                                                    indef_cov_mat<Parameters, Solutions>,
-                                                    no_axis_effect<Parameters, Solutions>,
-                                                    no_coord_effect<Parameters, Solutions>,
+                  max_iter<Parameters, Solutions>
+                                                    // max_fevals<Parameters, Solutions>,
+                                                    // tol_x<Parameters, Solutions>,
+                                                    // tol_fitness<Parameters, Solutions>,
+                                                    // condition_number<Parameters, Solutions>,
+                                                    // indef_cov_mat<Parameters, Solutions>,
+                                                    // no_axis_effect<Parameters, Solutions>,
+                                                    // no_coord_effect<Parameters, Solutions>,
                                                 }};
 
 }  // namespace libea::termination

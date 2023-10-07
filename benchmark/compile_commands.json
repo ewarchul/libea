@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/ewarchul/open-source/libea/benchmark",
+  "command": "/usr/bin/g++-13 -DFMT_SHARED -I/home/ewarchul/open-source/libea/include -isystem /usr/include/eigen3 -O3 -DNDEBUG -O3 -ffast-math -march=native -std=gnu++20 -o CMakeFiles/main.dir/main.cpp.o -c /home/ewarchul/open-source/libea/main.cpp",
+  "file": "/home/ewarchul/open-source/libea/main.cpp"
+}
+]

@@ -20,7 +20,7 @@ constexpr auto csa_cmaes = [](const auto& x0, auto&& fn, const auto& params,
 
 constexpr auto ppmf_cmaes = [](const auto& x0, auto&& fn, const auto& params,
                                const auto& terminations) {
-  auto sigma_updater = libea::updaters::sigma::ppmf{2.0, 0.1};
+  auto sigma_updater = libea::updaters::sigma::ppmf{2, 0.1};
   return solver{x0, sigma_updater, fn, params, terminations};
 };
 

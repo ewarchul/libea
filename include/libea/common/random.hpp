@@ -5,7 +5,7 @@
 
 namespace {
 std::random_device rd{};
-Eigen::Rand::P8_mt19937_64 urng{rd()};
+Eigen::Rand::P8_mt19937_64 urng{1};
 }  // namespace
 
 namespace libea::common {

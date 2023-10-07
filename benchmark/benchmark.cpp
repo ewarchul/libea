@@ -65,7 +65,7 @@ auto main() -> int {
   {
     fmt::print("Running libcmaes\n");
     auto start = chr::system_clock::now();
-   // run_libcmaes(100);
+    run_libcmaes(100);
     auto end = chr::system_clock::now();
     fmt::print("LIBCMAES -> {}ms\n", chr::duration_cast<chr::milliseconds>(end - start).count());
   }

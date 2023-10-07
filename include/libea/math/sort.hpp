@@ -16,7 +16,7 @@ auto trunc_sort_ind(auto &&fitness_vals, const auto trunc_num) {
   auto indices = zipped | ranges::views::take(trunc_num) |
                  ranges::views::keys | ranges::to<std::vector<int>>;
   auto fitness = zipped | ranges::views::take(trunc_num) |
-                 ranges::views::values | ranges::to<std::vector<int>>;
+                 ranges::views::values | ranges::to<std::vector<double>>;
   return std::make_pair(indices, fitness);
 }
 } // namespace libea::math

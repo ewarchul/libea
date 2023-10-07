@@ -2,6 +2,7 @@
 
 #include <Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h>
 #include <libea/Math.h>
+
 #include <libea/common/types.h>
 
 #include <Eigen/Dense>
@@ -60,6 +61,9 @@ template <typename SigmaUpdater, typename FitnessFunction> class solver {
  private:
   [[nodiscard]] auto ask() {
     types::dmat_t diffs = common::rnorm(params_.dim_, params_.lambda_);
+    std::cout << "DIFFS" << std::endl;
+    std::cout << diffs << std::endl;
+    std::cout << "DIFFS END\n";
     types::dmat_t population = solutions_.mean_.replicate(1, params_.lambda_) + solutions_.sigma_ * solutions_.BD_mat_ * diffs;
 
     return std::make_pair(population, diffs);

@@ -33,6 +33,15 @@ target_include_directories(
                   $<INSTALL_INTERFACE:include>)
 set_target_properties(eacxx PROPERTIES LINKER_LANGUAGE CXX CXX_STANDARD 20)
 
+find_package(Eigen3 3.4 REQUIRED NO_MODULE)
+find_package(fmt 10.0.0 REQUIRED)
+find_package(range-v3 REQUIRED)
+
+add_executable(main main.cpp)
+target_link_libraries(main eacxx fmt::fmt Eigen3::Eigen)
+set_target_properties(main PROPERTIES CXX_STANDARD 20)
+target_compile_options(main PRIVATE ${OPTIM_COMPILE_FLAGS})
+
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
   "${PROJECT_BINARY_DIR}/eacxxConfigVersion.cmake"

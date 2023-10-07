@@ -38,7 +38,7 @@ struct parameters {
 
   types::u64_t max_fevals_{consts::MAX_FEVALS_MUL * dim_};
   types::u64_t max_iter_{};
-  types::u32_t lambda_{4 * dim_};
+  types::u32_t lambda_{4};
   types::u32_t mu_{types::as<types::u32_t>(std::floor(types::as<double>(lambda_) / 2))};
 
   double tolx_{};
